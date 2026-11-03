@@ -20,14 +20,14 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Cards" />
   <meta name="twitter:description" content="Explore cardology with Cards: find your birthday cards, Life Script, and cycles." />
-  <link rel="stylesheet" href="styles.css?v=37">
+  <link rel="stylesheet" href="styles.css?v=44">
 
 </head>
 <body class="starry">
 <canvas class="stars-bg" aria-hidden="true"></canvas>
-<script src="app.js?v=39"></script>
+<script src="app.js?v=48"></script>
 <main id="main" tabindex="-1">
-  <h1 class="site-title">Mystic Cards <span data-solar-number="52">44</span></h1>
+  <h1 class="site-title">Mystic Cards <button type="button" class="site-title-base" data-solar-number="52" data-solar-format-toggle role="switch" aria-label="Decimal solar values" aria-checked="false" title="Switch between base 12 and base 10">44</button></h1>
   <!-- NC MARKUP: FINDER -->
   <section class="finder page-section section-open" id="finder" aria-labelledby="finderHeading">
     <h2 class="vh" id="finderHeading">Finder</h2>
@@ -1817,16 +1817,23 @@ html, body { height: auto; min-height: 0; }
                     <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m2.5 4.5 3.5 3 3.5-3" /></svg>
                   </button>
                 </div>
-                    <details class="bday-more-menu">
-                      <summary aria-label="More contact actions">More<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m2.5 4.5 3.5 3 3.5-3" /></svg></summary>
-                      <div class="bday-more-menu-panel">
-                        <button class="bday-menu-action" id="bdayImportBtn" type="button">Import contacts</button>
-                        <button class="bday-menu-action" id="bdayExportBtn" type="button">Export contacts</button>
-                        <button class="bday-menu-action" id="bdayClearStorageBtn" type="button">Clear contacts and settings</button>
-                        <button class="bday-menu-action" id="bdayInfoBtn" type="button" aria-expanded="false" aria-controls="bdayNote">Help &amp; storage</button>
-                      </div>
-                    </details>
+                    <button type="button" class="bday-settings-toggle" id="bdaySettingsToggle" aria-label="Contact settings" title="Contact settings" aria-expanded="false" aria-controls="bdaySettingsPanel"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8 3.5-.1-1.2-2-.6a6.4 6.4 0 0 0-.6-1.5l1-1.8-1.7-1.7-1.8 1a6.4 6.4 0 0 0-1.5-.6l-.6-2h-2.4l-.6 2a6.4 6.4 0 0 0-1.5.6l-1.8-1L4.7 6.9l1 1.8a6.4 6.4 0 0 0-.6 1.5l-2 .6v2.4l2 .6a6.4 6.4 0 0 0 .6 1.5l-1 1.8 1.7 1.7 1.8-1a6.4 6.4 0 0 0 1.5.6l.6 2h2.4l.6-2a6.4 6.4 0 0 0 1.5-.6l1.8 1 1.7-1.7-1-1.8a6.4 6.4 0 0 0 .6-1.5l2-.6L20 12Z"/></svg></button>
                     <input type="file" id="bdayImportFile" accept="application/json" hidden>
+                  </div>
+                </div>
+                <div class="bday-settings-panel" id="bdaySettingsPanel" hidden>
+                  <fieldset class="bday-display-options">
+                    <legend>Contact details</legend>
+                    <label><input type="checkbox" data-contact-display="lifePath" checked> Life path numbers</label>
+                    <label><input type="checkbox" data-contact-display="zodiac" checked> Vietnamese zodiac</label>
+                    <label><input type="checkbox" data-contact-display="age" checked> Age</label>
+                    <label><input type="checkbox" data-contact-display="earthCard" checked> Earth card</label>
+                  </fieldset>
+                  <div class="bday-settings-actions">
+                    <button class="bday-menu-action" id="bdayImportBtn" type="button">Import contacts</button>
+                    <button class="bday-menu-action" id="bdayExportBtn" type="button">Export contacts</button>
+                    <button class="bday-menu-action" id="bdayClearStorageBtn" type="button">Clear contacts</button>
+                    <button class="bday-menu-action" id="bdayInfoBtn" type="button" aria-expanded="false" aria-controls="bdayNote">Help &amp; storage</button>
                   </div>
                 </div>
                 <p class="bday-note" id="bdayNote" hidden>Contacts are saved in this browser only. Export to back up or move to another device.</p>
@@ -1915,21 +1922,10 @@ html, body { height: auto; min-height: 0; }
 <button type="button" class="q-disp-toggle" data-card-solar-toggle role="switch" aria-checked="false"><span class="q-toggle-icon" aria-hidden="true">☀</span><span>Show solar values on cards</span><span class="q-switch-track" aria-hidden="true"></span></button>
                           <button type="button" class="q-disp-toggle" data-q-mode="solar-card" role="switch" aria-checked="false"><span class="q-toggle-icon" aria-hidden="true">☀</span><span>Large solar values</span><span class="q-switch-track" aria-hidden="true"></span></button>
                           <button type="button" class="q-disp-toggle" data-q-mode="binary" role="switch" aria-checked="false"><span class="q-toggle-icon" aria-hidden="true">◈</span><span>Binary</span><span class="q-switch-track" aria-hidden="true"></span></button>
+                          <button type="button" class="q-disp-toggle q-alt-toggle" id="qAlt" role="switch" aria-checked="false"><span class="q-toggle-icon" aria-hidden="true">♛</span><span>Pips Only</span><span class="q-switch-track" aria-hidden="true"></span></button>
                           <button type="button" class="q-disp-toggle" data-q-mode="displacements" role="switch" aria-checked="false"><span class="q-toggle-icon" aria-hidden="true">⇄</span><span>Displacements</span><span class="q-switch-track" aria-hidden="true"></span></button>
+                          <button type="button" class="q-disp-toggle" id="qJoker" role="switch" aria-checked="false"><span class="q-toggle-icon" aria-hidden="true">✦</span><span>Show Joker</span><span class="q-switch-track" aria-hidden="true"></span></button>
                         </div>
-                      </fieldset>
-                      <fieldset class="q-control-group q-appearance-group">
-                        <legend>Appearance</legend>
-                        <div class="q-display-toggles">
-<button type="button" class="q-disp-toggle" id="qJoker" role="switch" aria-checked="false">
-                            <span class="q-toggle-icon" aria-hidden="true">✦</span><span>Show Joker</span><span class="q-switch-track" aria-hidden="true"></span>
-                          </button>
-
-
-<button type="button" class="q-disp-toggle q-alt-toggle" id="qAlt" role="switch" aria-checked="false">
-                            <span class="q-toggle-icon" aria-hidden="true">♛</span><span>Pips Only</span><span class="q-switch-track" aria-hidden="true"></span>
-                          </button>
-</div>
                       </fieldset>
                     </div>
                     </div>

@@ -418,7 +418,7 @@ window.MC_STARS = [[0.0304,-3.0275,5.13,-0.128],[0.03267,-6.0141,4.37,1.631],[0.
         K_CROWN_BOTTOM, K_QUAD_JOKER, K_QSIZE, K_QREADLTR, K_BIRTHS,
         K_CONTACT_TAGS, K_PRC_SYSTEM];
       var otherKeys = ['nature_binaryRain', 'nature_floatingCards', 'mc-solar-duodecimal',
-        'mc-show-card-solar-values', 'mc-reading-section-order', 'mc-reading-section-visibility'];
+        'mc-show-card-solar-values', 'mc-contact-display', 'mc-reading-section-order', 'mc-reading-section-visibility'];
       keys.forEach(function (key) {
         localStorage.removeItem(key);
         localStorage.removeItem(key.replace(/^mysticscards_/, 'cardsoflife_'));
@@ -2382,7 +2382,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const digits = this.value.replace(/\D+/g, '');
       if (digits.length >= 2) {
         monthInput.focus();
-        focusEnd(monthInput);
+        monthInput.select();
       }
     });
 
@@ -10891,7 +10891,7 @@ window.TZ_COORDS = {
     { name: 'Taurus', glyph: '♉', ruler: 'Venus', start: [4, 20], end: [5, 20] },
     { name: 'Gemini', glyph: '♊', ruler: 'Mercury', start: [5, 21], end: [6, 20] },
     { name: 'Cancer', glyph: '♋', ruler: 'Moon', start: [6, 21], end: [7, 22] },
-    { name: 'Leo', glyph: '♌', ruler: 'Uranus', start: [7, 23], end: [8, 22] },
+    { name: 'Leo', glyph: '♌', ruler: 'Sun', start: [7, 23], end: [8, 22] },
     { name: 'Virgo', glyph: '♍', ruler: 'Mercury', start: [8, 23], end: [9, 22] },
     { name: 'Libra', glyph: '♎', ruler: 'Venus', start: [9, 23], end: [10, 22] },
     { name: 'Scorpio', glyph: '♏', ruler: 'Pluto', start: [10, 23], end: [11, 21] },
@@ -11606,10 +11606,10 @@ window.TZ_COORDS = {
     const tropicalHTML = prcCardletHTML(sign, 'Tropical sun sign', script, card, { cuspSign: cuspSign, kind: 'Tropical', panelId: 'prcTropicalReading' });
     return `<div class="ls-stat-block ls-zodiac-block">
       <div class="ls-zodiac-heading">
-        <h3 class="ls-stat-label">Planetary Ruling Card</h3>
+        <h3 class="ls-stat-label">Sign</h3>
       </div>
       <div class="nc-prc-pair">
-      <section class="ls-prc-panel" id="prcTropicalPanel" aria-label="Planetary ruling card" data-prc-panel="tropical">
+      <section class="ls-prc-panel" id="prcTropicalPanel" aria-label="Sign card" data-prc-panel="tropical">
         ${tropicalHTML}
       </section>
       </div>
@@ -11643,14 +11643,14 @@ window.TZ_COORDS = {
       const cardHTML = statsCardHTML(oc, {
         staticCard: true,
         extraCls: 'ls-ghost' + selfCls,
-        title: `${verb === 'Displaces' ? 'Spirit' : 'Soul'} ${fullCardName(oc)}`,
+        title: `${verb === 'Displaces' ? 'Displaced' : 'Displacing'} ${fullCardName(oc)}`,
         interpretation: verb === 'Displaces' ? 'displaces' : 'displaced',
         relationRole: verb === 'Displaces' ? 'displaces' : 'displaced',
         relationIdx: idx,
         controls: 'lsDisplacementReading'
       });
       return `<div class="ls-ghost-pair">
-        <div class="ls-ghost-label">${verb === 'Displaces' ? 'Spirit' : 'Soul'}</div>
+        <div class="ls-ghost-label">${verb === 'Displaces' ? 'Displaced' : 'Displacing'}</div>
         ${cardHTML}
       </div>`;
     }).join('');
@@ -11950,7 +11950,7 @@ window.TZ_COORDS = {
       Array.from(stats.children).forEach(function (block) {
         const label = block.querySelector('.ls-stat-label');
         const text = label ? label.textContent.trim() : '';
-        if (text === 'Dates' || text === 'Displacements' || text === 'Quadration Chart Position' || text === 'Planetary Ruling Card') statBlocks[text] = block;
+        if (text === 'Dates' || text === 'Displacements' || text === 'Quadration Chart Position' || text === 'Sign') statBlocks[text] = block;
       });
       const topStats = document.createElement('div');
       topStats.className = 'ls-stats ls-stats--about';
@@ -11976,7 +11976,7 @@ window.TZ_COORDS = {
       const lowerStats = document.createElement('div');
       lowerStats.className = 'ls-stats ls-stats--about nc-displacement-reciprocal';
       if (statBlocks.Displacements) lowerStats.appendChild(statBlocks.Displacements);
-      if (statBlocks['Planetary Ruling Card']) lowerStats.appendChild(statBlocks['Planetary Ruling Card']);
+      if (statBlocks['Sign']) lowerStats.appendChild(statBlocks['Sign']);
       if (reciprocal) lowerStats.appendChild(reciprocal);
       if (lowerStats.children.length) aboutTarget.appendChild(lowerStats);
 
@@ -12186,7 +12186,7 @@ window.TZ_COORDS = {
         ? (relation && relation.role === 'displaces'
           ? `${fullCardName(otherCard)} displaces ${fullCardName(card)}`
           : `${fullCardName(card)} displaces ${fullCardName(otherCard)}`)
-        : (kind === 'displaces' ? 'Spirit' : 'Soul');
+        : (kind === 'displaces' ? 'Displaced' : 'Displacing');
       const otherIsDisplacer = relation && relation.role === 'displaces';
       const displacer = otherIsDisplacer ? otherCard : card;
       const displaced = otherIsDisplacer ? card : otherCard;
@@ -12406,7 +12406,7 @@ window.TZ_COORDS = {
   }
 
   function displacementConnectionSectionHTML(result) {
-    const role = result.relationRole === 'displaced' ? 'Soul' : 'Spirit';
+    const role = 'Displacing';
     return `<section class="ls-connection ls-connection--displacement">
       <p class="ls-connection-title"><b>${fullCardName(result.displacer)}</b> displaces <b>${fullCardName(result.displaced)}</b>.</p>
       <div class="ls-row ls-row--single">${singleSeatHTML(role, result.displacer, result.displacer, {
@@ -12732,9 +12732,9 @@ window.TZ_COORDS = {
   }
 
   function connectionDiagramHTML(result, dates) {
-    if (result.samePrc) return `<div class="ls-row ls-row--single">${singleSeatHTML('PRC', result.ownerCard, result.ownerCard, { label: 'PRC', symbol: '✦', title: 'Shared planetary ruling card' })}</div>`;
+    if (result.samePrc) return `<div class="ls-row ls-row--single">${singleSeatHTML('SIGN', result.ownerCard, result.ownerCard, { label: 'SIGN', symbol: '✦', title: 'Shared planetary ruling card' })}</div>`;
     if (result.displacement) {
-      const role = result.side === 'you' ? 'Spirit' : 'Soul';
+      const role = 'Displacing';
       return `<div class="ls-row ls-row--single">${singleSeatHTML(role, result.ownerCard, result.ownerCard, { symbol: '↔', label: role, title: `${role} displacement` })}</div>`;
     }
     if (result.spread === 'Ruling card') return `<div class="ls-row ls-row--single">${singleSeatHTML(result.planet, result.matchCard, result.matchCard)}</div>`;
@@ -14217,6 +14217,13 @@ window.TZ_COORDS = {
   let _tagFiltersOpen = false;
   let _birthPage = 1;
   let _birthPageCount = 1;
+  const contactDisplay = { lifePath: true, zodiac: true, age: true, earthCard: true };
+  try {
+    const savedDisplay = JSON.parse(localStorage.getItem('mc-contact-display') || '{}');
+    Object.keys(contactDisplay).forEach(key => {
+      if (typeof savedDisplay[key] === 'boolean') contactDisplay[key] = savedDisplay[key];
+    });
+  } catch (e) {}
   let _birthLoadTimer = null;
   let _formTags = [];
   let _tagCreatorOpen = false;
@@ -14506,18 +14513,19 @@ window.TZ_COORDS = {
       lastFavoriteGroup = isFavorite;
       return groupHeading + '<div class="birth-item" data-id="' + e.id + '">' +
         '<button type="button" class="birth-open" aria-label="Open reading for ' + escHtml(e.name) + '">' +
-          '<span class="birth-card-chips">' + reciprocalBirthChips(e) + birthChip(e) + '</span>' +
+          '<span class="birth-card-chips">' + (contactDisplay.earthCard ? reciprocalBirthChips(e) : '') + birthChip(e) + '</span>' +
           '<span class="birth-item-body">' +
             '<span class="birth-name">' + escHtml(e.name) + '</span>' +
             '<span class="birth-date birth-date-primary">' + MONTHS_SHORT[e.month - 1] + ' ' + e.day + ', ' + e.year +
-              (ageFromBirthYear(e.year, e.month, e.day) < 0 ? ' &middot; Future birthday' : ' &middot; age ' + ageFromBirthYear(e.year, e.month, e.day)) + '</span>' +
-            '<span class="birth-date birth-date-secondary">Life path ' + lifePathNumber(e.year, e.month, e.day) +
-              (chinese ? ' &middot; ' + escHtml(chinese.animal) : '') + '</span>' +
+              (contactDisplay.age ? (ageFromBirthYear(e.year, e.month, e.day) < 0 ? ' &middot; Future birthday' : ' &middot; age ' + ageFromBirthYear(e.year, e.month, e.day)) : '') + '</span>' +
+            ((contactDisplay.lifePath || (contactDisplay.zodiac && chinese)) ? '<span class="birth-date birth-date-secondary">' +
+              [contactDisplay.lifePath ? 'Life path ' + lifePathNumber(e.year, e.month, e.day) : '',
+               contactDisplay.zodiac && chinese ? escHtml(chinese.animal) : ''].filter(Boolean).join(' &middot; ') + '</span>' : '') +
           '</span>' +
         '</button>' +
-        '<button type="button" class="birth-favorite' + (e.favorite ? ' is-favorite' : '') + '" data-favorite="' + e.id + '" aria-pressed="' + (e.favorite ? 'true' : 'false') + '" aria-label="' + (e.favorite ? 'Remove ' : 'Add ') + escHtml(e.name) + (e.favorite ? ' from favourites' : ' to favourites') + '">&#9733;</button>' +
         '<details class="birth-actions"><summary aria-label="Actions for ' + escHtml(e.name) + '">&#183;&#183;&#183;</summary>' +
           '<div class="birth-actions-menu"><button type="button" data-edit="' + e.id + '">Edit contact</button>' +
+          '<button type="button" data-favorite="' + e.id + '">' + (e.favorite ? 'Remove from favourites' : 'Add to favourites') + '</button>' +
           '<button type="button" data-del="' + e.id + '">Delete contact</button></div></details>' +
       '</div>';
       }).join('');
@@ -14527,7 +14535,12 @@ window.TZ_COORDS = {
         const item = button.closest('.birth-item');
         const id = item ? +item.dataset.id : NaN;
         const entry = loadBirths().find(x => x.id === id);
-        if (entry) loadBirth(entry, _bdayTarget);
+        if (entry) {
+          loadBirth(entry, _bdayTarget);
+          if (typeof window.closeFinderTray === 'function') window.closeFinderTray('bday');
+          const contactsButton = document.getElementById('finderBdayBtn');
+          if (contactsButton) contactsButton.focus({ preventScroll: true });
+        }
       });
     });
     panel.querySelectorAll('[data-edit]').forEach(b => {
@@ -14560,6 +14573,8 @@ window.TZ_COORDS = {
           return;
         }
         renderBirthPanel();
+        const action = panel.querySelector('.birth-item[data-id="' + id + '"] .birth-actions > summary');
+        if (action) action.focus();
       });
     });
     if (pager) {
@@ -14974,6 +14989,24 @@ window.TZ_COORDS = {
   }
 
   function wireTray() {
+    const settingsToggle = document.getElementById('bdaySettingsToggle');
+    const settingsPanel = document.getElementById('bdaySettingsPanel');
+    function closeContactSettings() {
+      settingsPanel.hidden = true;
+      settingsToggle.setAttribute('aria-expanded', 'false');
+    }
+    settingsToggle.addEventListener('click', () => {
+      settingsPanel.hidden = !settingsPanel.hidden;
+      settingsToggle.setAttribute('aria-expanded', String(!settingsPanel.hidden));
+    });
+    settingsPanel.querySelectorAll('[data-contact-display]').forEach(input => {
+      input.checked = contactDisplay[input.dataset.contactDisplay];
+      input.addEventListener('change', () => {
+        contactDisplay[input.dataset.contactDisplay] = input.checked;
+        try { localStorage.setItem('mc-contact-display', JSON.stringify(contactDisplay)); } catch (e) {}
+        renderBirthPanel();
+      });
+    });
     const addToggle = document.getElementById('bdayAddBtn');
     if (addToggle) addToggle.addEventListener('click', () => {
       const p = document.getElementById('birthAddPanel');
@@ -15002,17 +15035,21 @@ window.TZ_COORDS = {
     [exportBtn, importBtn].forEach(button => {
       if (!button) return;
       button.addEventListener('click', () => {
-        const menu = button.closest('.bday-more-menu');
-        if (menu) window.setTimeout(() => { menu.open = false; }, 0);
+        window.setTimeout(closeContactSettings, 0);
       });
     });
     const clearStorageBtn = document.getElementById('bdayClearStorageBtn');
     if (clearStorageBtn) clearStorageBtn.addEventListener('click', () => {
-      if (!window.confirm('Clear Cards contacts and settings stored in this browser? This cannot be undone. Export contacts first if you want a backup.')) return;
-      try {
-        CardsStore.clearLocalData();
-        window.location.reload();
-      } catch (e) { bdayToast('Could not clear Cards storage.', true); }
+      if (!window.confirm('Clear all contacts stored in this browser? This cannot be undone. Export contacts first if you want a backup.')) return;
+      if (!saveBirths([])) {
+        bdayToast('Could not clear contacts. Check browser storage and try again.', true);
+        return;
+      }
+      closeBirthAddPanel();
+      _birthPage = 1;
+      renderBirthPanel();
+      closeContactSettings();
+      bdayToast('Contacts cleared.', false);
     });
     const infoBtn = document.getElementById('bdayInfoBtn');
     const note = document.getElementById('bdayNote');
@@ -15020,8 +15057,7 @@ window.TZ_COORDS = {
       const open = note.hidden;
       note.hidden = !open;
       infoBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      const menu = infoBtn.closest('.bday-more-menu');
-      if (menu) menu.open = false;
+      closeContactSettings();
     });
     const search = document.getElementById('bdaySearch');
     if (search) search.addEventListener('input', () => {
@@ -15382,8 +15418,11 @@ window.PLANET_DATA = {
     if (!root || !toggle || !list) return;
     const solarToggles = document.querySelectorAll('[data-card-solar-toggle]');
     const solarKey = 'mc-show-card-solar-values';
-    let showSolar = false;
-    try { showSolar = localStorage.getItem(solarKey) === 'true'; } catch (e) {}
+    let showSolar = true;
+    try {
+      const saved = localStorage.getItem(solarKey);
+      if (saved !== null) showSolar = saved === 'true';
+    } catch (e) {}
     function applySolarPreference() {
       document.body.classList.toggle('show-card-solar-values', showSolar);
       solarToggles.forEach(function (button) {
