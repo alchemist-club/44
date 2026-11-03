@@ -1,6 +1,6 @@
 // Cache only this app's shell; leave other pages on the origin untouched.
-const CACHE = 'mystics-cards-shell-v66';
-const SHELL = ['./index.html', './styles.css?v=44', './app.js?v=48', './favicon.ico', './favicon.svg', './apple-touch-icon.png', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = 'mystics-cards-shell-v83';
+const SHELL = ['./index.html', './styles.css?v=61', './app.js?v=58', './favicon.ico', './favicon.svg', './apple-touch-icon.png', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));

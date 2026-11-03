@@ -15539,8 +15539,8 @@ window.PLANET_DATA = {
       });
     }
     const settingsPanel = document.getElementById('ncOrderControls');
-    const tabs = [document.getElementById('settingsCalculatorTab'), document.getElementById('settingsArrangeTab'), document.getElementById('settingsInfoTab')];
-    const panes = [calcPanel, document.getElementById('readingSettingsPanel'), document.getElementById('settingsInfoPanel')];
+    const tabs = [document.getElementById('settingsCalendarTab'), document.getElementById('settingsGematriaTab'), document.getElementById('settingsCalculatorTab'), document.getElementById('settingsArrangeTab'), document.getElementById('settingsInfoTab')];
+    const panes = [document.getElementById('toolsCalendarPanel'), document.getElementById('toolsGematriaPanel'), calcPanel, document.getElementById('readingSettingsPanel'), document.getElementById('settingsInfoPanel')];
     function selectToolsTab(index, focus) {
       tabs.forEach(function (tab, i) {
         const selected = i === index;
@@ -15548,7 +15548,7 @@ window.PLANET_DATA = {
         tab.tabIndex = selected ? 0 : -1;
         panes[i].hidden = !selected;
       });
-      if (index === 0) requestAnimationFrame(sizeCalculator);
+      if (panes[index] === calcPanel) requestAnimationFrame(sizeCalculator);
       if (focus) tabs[index].focus();
     }
     tabs.forEach(function (tab, index) {
@@ -15598,4 +15598,202 @@ document.addEventListener('DOMContentLoaded', function () {
       button.click();
     });
   }, true);
+});
+
+// Month view in Tools. Selecting a date loads its reading in Finder.
+document.addEventListener('DOMContentLoaded', function () {
+  const grid = document.getElementById('toolsCalendarDays');
+  const monthInput = document.getElementById('toolsCalendarMonth');
+  const yearInput = document.getElementById('toolsCalendarYear');
+  const announcement = document.getElementById('toolsCalendarAnnouncement');
+  const weekly = document.getElementById('toolsCalendarWeekly');
+  const monthView = document.getElementById('toolsCalendarMonthView');
+  const yearView = document.getElementById('toolsCalendarYearView');
+  const yearToggle = document.getElementById('calendarYearToggle');
+  const previous = document.getElementById('calendarPrevious'), next = document.getElementById('calendarNext');
+  let fullYear = false;
+  if (!grid || !monthInput || !yearInput || !announcement || !weekly) return;
+  const today = new Date();
+  let year = today.getFullYear(), month = today.getMonth();
+  let selected = null;
+  function render() {
+    monthInput.value = String(month + 1).padStart(2, '0');
+    yearInput.value = String(year);
+    announcement.textContent = new Date(year, month, 1).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+    grid.replaceChildren();
+    weekly.replaceChildren();
+    monthView.hidden = fullYear;
+    yearView.hidden = !fullYear;
+    yearToggle.setAttribute('aria-pressed', String(fullYear));
+    yearToggle.textContent = fullYear ? 'Month view' : 'Full year';
+    previous.setAttribute('aria-label', fullYear ? 'Previous year' : 'Previous month');
+    next.setAttribute('aria-label', fullYear ? 'Next year' : 'Next month');
+    if (fullYear) {
+      announcement.textContent = 'Full year ' + year;
+      renderYear();
+      return;
+    }
+    // Seven-day periods begin on 1 January; the remaining year-end days
+    // have no assigned card in this 52-card sequence.
+    const firstDay = Math.floor((Date.UTC(year, month, 1) - Date.UTC(year, 0, 1)) / 86400000);
+    const lastDay = Math.floor((Date.UTC(year, month + 1, 0) - Date.UTC(year, 0, 1)) / 86400000);
+    const formatDate = function (day) {
+      return new Date(Date.UTC(year, 0, day + 1)).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    };
+    for (let period = Math.floor(firstDay / 7); period <= Math.floor(lastDay / 7); period++) {
+      const start = period * 7, end = Math.min(start + 6, Math.floor((Date.UTC(year + 1, 0, 1) - Date.UTC(year, 0, 1)) / 86400000) - 1);
+      const entry = document.createElement('div'), range = document.createElement('span'), face = document.createElement('span');
+      entry.className = 'tools-calendar-weekly-entry';
+      const currentDate = new Date();
+      const currentDay = Math.floor((Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()) - Date.UTC(year, 0, 1)) / 86400000);
+      if (currentDate.getFullYear() === year && currentDay >= start && currentDay <= end) {
+        entry.classList.add('is-current');
+        const currentLabel = document.createElement('span');
+        currentLabel.className = 'tools-calendar-current-label';
+        currentLabel.textContent = 'This week';
+        entry.appendChild(currentLabel);
+      }
+      range.className = 'tools-calendar-weekly-range';
+      range.textContent = formatDate(start) + (start === end ? '' : '–' + formatDate(end));
+      face.className = 'tools-calendar-weekly-card';
+      if (period < 52) {
+        const card = SPREAD_CARDS[period];
+        face.innerHTML = '<span>' + card.rank + '</span>' + window.pipMark(card.sym);
+        if (card.suit === 'hearts' || card.suit === 'diamonds') face.classList.add('is-red');
+        entry.setAttribute('aria-label', (entry.classList.contains('is-current') ? 'This week, ' : '') + range.textContent + ': ' + card.rank + ' of ' + card.suit);
+      } else {
+        face.textContent = '—';
+        entry.setAttribute('aria-label', (entry.classList.contains('is-current') ? 'This week, ' : '') + range.textContent + ': no weekly card assigned');
+      }
+      entry.append(range, face);
+      weekly.appendChild(entry);
+    }
+    const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+    for (let i = 0; i < offset; i++) grid.appendChild(document.createElement('span'));
+    const count = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= count; day++) {
+      const date = new Date(year, month, day);
+      const value = window.solarValue(month + 1, day);
+      const card = value === 0 ? { rank: 'Joker', suit: 'joker', sym: '✦' } : SPREAD_CARDS[value - 1];
+      const button = document.createElement('button');
+      const number = document.createElement('span'), face = document.createElement('span');
+      button.type = 'button';
+      button.className = 'tools-calendar-day';
+      if (date.toDateString() === new Date().toDateString()) button.classList.add('is-today');
+      if (selected && date.toDateString() === selected.toDateString()) button.classList.add('is-selected');
+      const name = card.suit === 'joker' ? 'Joker' : card.rank + ' of ' + card.suit;
+      button.setAttribute('aria-label', date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) + ', ' + name);
+      if (selected && date.toDateString() === selected.toDateString()) button.setAttribute('aria-current', 'date');
+      number.textContent = day;
+      face.className = 'tools-calendar-card' + (card.suit === 'hearts' || card.suit === 'diamonds' ? ' is-red' : '');
+      face.innerHTML = card.suit === 'joker' ? card.sym : '<span>' + card.rank + '</span>' + window.pipMark(card.sym);
+      button.append(number, face);
+      button.addEventListener('click', function () {
+        selected = date;
+        grid.querySelectorAll('.is-selected').forEach(function (el) { el.classList.remove('is-selected'); el.removeAttribute('aria-current'); });
+        button.classList.add('is-selected');
+        button.setAttribute('aria-current', 'date');
+        window.loadDateInFinder(month + 1, day, 'self', { year: year });
+      });
+      grid.appendChild(button);
+    }
+  }
+  function renderYear() {
+    yearView.replaceChildren();
+    const table = document.createElement('table'), caption = document.createElement('caption');
+    const head = document.createElement('thead'), header = document.createElement('tr'), body = document.createElement('tbody');
+    table.className = 'tools-calendar-year-grid';
+    caption.className = 'vh'; caption.textContent = 'Cards for each date in ' + year;
+    const corner = document.createElement('th'); corner.scope = 'col'; corner.textContent = 'Day'; header.appendChild(corner);
+    for (let m = 0; m < 12; m++) {
+      const th = document.createElement('th'); th.scope = 'col';
+      th.textContent = new Date(year, m, 1).toLocaleDateString('en-AU', { month: 'short' }).slice(0, 2);
+      th.setAttribute('aria-label', new Date(year, m, 1).toLocaleDateString('en-AU', { month: 'long' })); header.appendChild(th);
+    }
+    head.appendChild(header);
+    for (let day = 1; day <= 31; day++) {
+      const row = document.createElement('tr'), dayHeader = document.createElement('th');
+      dayHeader.scope = 'row'; dayHeader.textContent = day; row.appendChild(dayHeader);
+      for (let m = 0; m < 12; m++) {
+        const cell = document.createElement('td');
+        if (day <= new Date(year, m + 1, 0).getDate()) {
+          const date = new Date(year, m, day), value = window.solarValue(m + 1, day);
+          const card = value === 0 ? { rank: 'Joker', suit: 'joker', sym: '✦' } : SPREAD_CARDS[value - 1];
+          const button = document.createElement('button');
+          button.type = 'button'; button.className = 'tools-calendar-year-day';
+          if (card.suit === 'hearts' || card.suit === 'diamonds') button.classList.add('is-red');
+          if (date.toDateString() === new Date().toDateString()) button.classList.add('is-today');
+          if (selected && date.toDateString() === selected.toDateString()) { button.classList.add('is-selected'); button.setAttribute('aria-current', 'date'); }
+          button.setAttribute('aria-label', date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) + ', ' + (card.suit === 'joker' ? 'Joker' : card.rank + ' of ' + card.suit) + (date.toDateString() === new Date().toDateString() ? ', today' : ''));
+          button.innerHTML = card.suit === 'joker' ? card.sym : '<span>' + card.rank + '</span>' + window.pipMark(card.sym);
+          button.addEventListener('click', function () {
+            selected = date;
+            yearView.querySelectorAll('.is-selected').forEach(function (el) { el.classList.remove('is-selected'); el.removeAttribute('aria-current'); });
+            button.classList.add('is-selected'); button.setAttribute('aria-current', 'date');
+            window.loadDateInFinder(m + 1, day, 'self', { year: year });
+          });
+          cell.appendChild(button);
+        } else { cell.className = 'is-empty'; }
+        row.appendChild(cell);
+      }
+      body.appendChild(row);
+    }
+    table.append(caption, head, body); yearView.appendChild(table);
+  }
+  yearToggle.addEventListener('click', function () { fullYear = !fullYear; render(); });
+  monthInput.addEventListener('change', function () {
+    const value = Number(monthInput.value);
+    if (/^\d{1,2}$/.test(monthInput.value) && value >= 1 && value <= 12) month = value - 1;
+    render();
+  });
+  yearInput.addEventListener('change', function () {
+    const value = Number(yearInput.value);
+    if (/^\d{4}$/.test(yearInput.value) && value >= 1000 && value <= 9999) year = value;
+    render();
+  });
+  function move(amount) { if (fullYear) year = Math.max(1000, Math.min(9999, year + amount)); else { const date = new Date(year, month + amount, 1); year = date.getFullYear(); month = date.getMonth(); } render(); }
+  document.getElementById('calendarPrevious').addEventListener('click', function () { move(-1); });
+  document.getElementById('calendarNext').addEventListener('click', function () { move(1); });
+  document.getElementById('calendarToday').addEventListener('click', function () { const date = new Date(); year = date.getFullYear(); month = date.getMonth(); render(); });
+  render();
+});
+
+// Case-sensitive 52-letter gematria, mapped to the app's solar card order.
+document.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('gematriaInput');
+  const result = document.getElementById('gematriaResult');
+  if (!input || !result) return;
+  function render() {
+    const letters = Array.from(input.value).filter(function (ch) { return /^[A-Za-z]$/.test(ch); });
+    result.replaceChildren();
+    if (!letters.length) {
+      const empty = document.createElement('p'); empty.className = 'gematria-empty';
+      empty.textContent = 'Enter letters to reveal a card.'; result.appendChild(empty); return;
+    }
+    const values = letters.map(function (ch) { const n = ch.charCodeAt(0); return n >= 97 ? n - 96 : n - 38; });
+    const total = values.reduce(function (sum, n) { return sum + n; }, 0);
+    const solar = (total - 1) % 52 + 1, card = SPREAD_CARDS[solar - 1];
+    const summary = document.createElement('div'); summary.className = 'gematria-summary';
+    const totalLine = document.createElement('p'); totalLine.className = 'gematria-total';
+    totalLine.textContent = 'Total ' + total + ' · Card value ' + solar;
+    const cardButton = document.createElement('button'); cardButton.type = 'button';
+    cardButton.className = 'gematria-card-button';
+    const rankNames = { A: 'Ace', J: 'Jack', Q: 'Queen', K: 'King' };
+    const cardName = (rankNames[card.rank] || card.rank) + ' of ' + card.suit;
+    cardButton.setAttribute('aria-label', 'Explore ' + cardName + ' in Finder');
+    cardButton.innerHTML = '<span class="spread-card ' + card.suit + '" aria-hidden="true">' + spreadCardPips(card) + '</span><span class="gematria-card-name"></span><span class="gematria-card-action">Explore in Finder</span>';
+    cardButton.querySelector('.gematria-card-name').textContent = cardName;
+    cardButton.addEventListener('click', function () { window.loadCardInFinder(solar - 1, cardButton); });
+    const details = document.createElement('details'), heading = document.createElement('summary'), breakdown = document.createElement('p');
+    details.className = 'gematria-breakdown'; heading.textContent = 'Letter values';
+    breakdown.textContent = letters.map(function (ch, i) { return ch + ' = ' + values[i]; }).join('  ·  ');
+    details.append(heading, breakdown); summary.append(totalLine, cardButton, details); result.appendChild(summary);
+  }
+  input.addEventListener('input', render);
+});
+
+// Refresh the page when the site title is activated.
+document.addEventListener('DOMContentLoaded', function () {
+  const title = document.getElementById('siteTitleRefresh');
+  if (title) title.addEventListener('click', function () { window.location.reload(); });
 });
