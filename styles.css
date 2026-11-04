@@ -5347,3 +5347,12 @@ button.ls-date-item:hover { border-color: var(--gold); background: var(--gold-li
 .site-title-emblem { cursor: pointer; }
 .site-title-emblem:hover { background: #fff8ea; border-color: var(--gold); }
 .site-title-emblem:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* Firefox on mobile can report browser chrome as a bottom safe-area inset. */
+@supports (-moz-appearance: none) {
+  @media (pointer: coarse) {
+    #finder .finder-tools { bottom: .5rem; }
+    #finder #ncOrderControls, #finder #bdayTrayWrap, #finder #qInlinePanel { bottom: 4.75rem; max-height: calc(100dvh - 5.75rem); }
+    .nc-panel-tabs { padding-bottom: .25rem; }
+  }
+}
