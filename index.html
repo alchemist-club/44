@@ -20,14 +20,14 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Cards" />
   <meta name="twitter:description" content="Explore cardology with Cards: find your birthday cards, Life Script, and cycles." />
-  <link rel="stylesheet" href="styles.css?v=61">
+  <link rel="stylesheet" href="styles.css?v=80">
 
 </head>
 <body class="starry">
 <canvas class="stars-bg" aria-hidden="true"></canvas>
-<script src="app.js?v=58"></script>
+<script src="app.js?v=74"></script>
 <main id="main" tabindex="-1">
-  <h1 class="site-title"><button type="button" id="siteTitleRefresh" class="site-title-refresh" aria-label="Refresh page">Mystic Cards</button> <button type="button" class="site-title-base" data-solar-number="52" data-solar-format-toggle role="switch" aria-label="Decimal solar values" aria-checked="false" title="Switch between base 12 and base 10">44</button></h1>
+  <h1 class="site-title"><button type="button" id="siteToday" class="site-title-emblem" aria-label="Load today’s card"><svg viewBox="0 0 100 100" class="site-title-suits"><svg x="17" y="17" width="29" height="29" viewBox="15 14 70 72" class="suit-red"><path d="M50,86 C45,79 15,58 15,34 C15,22 24,14 35,14 C43,14 48,20 50,27 C52,20 57,14 65,14 C76,14 85,22 85,34 C85,58 55,79 50,86 Z"/></svg><svg x="54" y="17" width="29" height="29" viewBox="7 10 86 86"><circle cx="50" cy="30" r="20"/><circle cx="27" cy="58" r="20"/><circle cx="73" cy="58" r="20"/><path d="M44,46 L40,96 L60,96 L56,46 Z"/></svg><svg x="17" y="54" width="29" height="29" viewBox="6 8 88 87"><path d="M50,8 C30,26 6,50 6,66 C6,82 22,90 36,82 C42,78 47,74 50,70 L40,95 L60,95 L50,70 C53,74 58,78 64,82 C78,90 94,82 94,66 C94,50 70,26 50,8 Z"/></svg><svg x="54" y="54" width="29" height="29" viewBox="14 6 72 88" class="suit-red"><path d="M50,6 L86,50 L50,94 L14,50 Z"/></svg></svg></button><button type="button" id="siteTitleRefresh" class="site-title-refresh" aria-label="Mystic Cards — refresh page"><span class="site-title-wordmark"><span class="site-title-mystic">Mystic</span><span class="site-title-cards">Cards</span></span></button> <button type="button" class="site-title-base" data-solar-number="52" data-solar-format-toggle role="switch" aria-label="Decimal solar values" aria-checked="false" title="Switch between base 12 and base 10">44</button></h1>
   <!-- NC MARKUP: FINDER -->
   <section class="finder page-section section-open" id="finder" aria-labelledby="finderHeading">
     <h2 class="vh" id="finderHeading">Finder</h2>
@@ -90,10 +90,11 @@
             <section id="toolsCalendarPanel" class="tools-calendar" role="tabpanel" aria-labelledby="settingsCalendarTab">
               <div class="tools-calendar-header">
                 <div><span class="tools-calendar-label">Explore dates</span><div class="tools-calendar-nav tools-calendar-date-nav"><button type="button" id="calendarPrevious" aria-label="Previous month">‹</button><div class="finder-datepair tools-calendar-datepair"><label class="finder-select-wrap"><span class="vh">Calendar month</span><input id="toolsCalendarMonth" class="finder-select finder-day-input" type="text" inputmode="numeric" maxlength="2" placeholder="MM" aria-label="Calendar month"></label><span class="finder-datepair-slash" aria-hidden="true">/</span><label class="finder-select-wrap tools-calendar-year-wrap"><span class="vh">Calendar year</span><input id="toolsCalendarYear" class="finder-select finder-day-input" type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" aria-label="Calendar year"></label></div><button type="button" id="calendarNext" aria-label="Next month">›</button></div><span id="toolsCalendarAnnouncement" class="vh" aria-live="polite"></span></div>
-                <div class="tools-calendar-nav tools-calendar-actions"><button type="button" id="calendarToday">Today</button><button type="button" id="calendarYearToggle" aria-pressed="false" aria-controls="toolsCalendarYearView">Full year</button></div>
+                <div class="tools-calendar-nav tools-calendar-actions"><button type="button" id="calendarPairToggle" class="tools-calendar-pair-toggle" aria-label="Pair opposite months" title="Pair opposite months" aria-pressed="false" aria-controls="toolsCalendarYearView" hidden><svg class="calendar-pair-symbol" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><circle class="calendar-sun-dot" cx="10" cy="10" r="1.5"/></svg><svg class="calendar-pair-symbol" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 2.5v15M2.5 10h15"/></svg></button><button type="button" id="calendarToday">Today</button><button type="button" id="calendarYearToggle" aria-pressed="false" aria-controls="toolsCalendarYearView">Full year</button></div>
               </div>
               <div id="toolsCalendarMonthView" class="tools-calendar-layout"><div><div class="tools-calendar-week" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
               <div id="toolsCalendarDays" class="tools-calendar-days"></div></div><aside class="tools-calendar-weekly" aria-label="Weekly cards"><div class="tools-calendar-weekly-heading">Weekly</div><div id="toolsCalendarWeekly" class="tools-calendar-weekly-list"></div></aside></div>
+              <p id="calendarExceptionNote" class="tools-calendar-exception-note" role="status" hidden></p>
               <div id="toolsCalendarYearView" class="tools-calendar-year-view" hidden></div>
               <p class="tools-calendar-hint">Select a day to explore its card</p>
             </section>
@@ -1993,6 +1994,7 @@ html, body { height: auto; min-height: 0; }
                   <section class="nc-alternate-result" id="ncAlternateResult" hidden><h3 class="ls-stat-label">Reciprocals</h3><div class="nc-alternate-cards"></div></section>
                   <div class="finder-about-longform" id="fAboutLongform"></div>
                   <div class="finder-about-lifescript finder-about-cardology" id="fAboutCardology"></div>
+                  <div class="finder-about-lifescript finder-about-cardology" id="fAboutDisplacements"></div>
   <section class="finder-intime is-empty" id="fInTime" aria-labelledby="finderCyclesHeading">
     <h3 class="ls-stat-label" id="finderCyclesHeading">Cycles</h3>
     <div class="it-inner"></div>

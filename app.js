@@ -2597,6 +2597,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
   }
+  window.reciprocalDateMatches = reciprocalMatches;
   window.reciprocalCardsForDate = function (date) {
     if (!date) return [];
     return reciprocalMatches(date.month, date.day).map(function (match) {
@@ -3363,6 +3364,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.refreshFinderGridHighlights = refreshFinderGridHighlights;
   window.loadDateInFinder = loadDateInFinder;
   document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('siteToday').addEventListener('click', loadTodayInFinder);
     const activate = function (event) {
       if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
       const relationshipReciprocal = event.target.closest('[data-relationship-reciprocal]');
@@ -11920,6 +11922,8 @@ window.TZ_COORDS = {
     if (planetInfo) planetInfo.remove();
     if (cardDates) { cardDates.replaceChildren(); cardDates.hidden = true; }
     if (aboutTarget) aboutTarget.innerHTML = '';
+    const displacementTarget = document.getElementById('fAboutDisplacements');
+    if (displacementTarget) displacementTarget.replaceChildren();
     if (planetInfo && aboutTarget) aboutTarget.appendChild(planetInfo);
     return aboutTarget;
   }
@@ -11978,7 +11982,7 @@ window.TZ_COORDS = {
       if (statBlocks.Displacements) lowerStats.appendChild(statBlocks.Displacements);
       if (statBlocks['Sign']) lowerStats.appendChild(statBlocks['Sign']);
       if (reciprocal) lowerStats.appendChild(reciprocal);
-      if (lowerStats.children.length) aboutTarget.appendChild(lowerStats);
+      if (lowerStats.children.length) document.getElementById('fAboutDisplacements').appendChild(lowerStats);
 
       if (statBlocks['Quadration Chart Position']) {
         if (planetInfo) statBlocks['Quadration Chart Position'].appendChild(planetInfo);
@@ -12064,7 +12068,9 @@ window.TZ_COORDS = {
     splitAboutLifeScript(stage);
     const aboutCardology = document.getElementById('fAboutCardology');
     bindLifeScriptCardClicks(aboutCardology);
-    identifyBirthPrc(card, aboutCardology);
+    const displacementTarget = document.getElementById('fAboutDisplacements');
+    bindLifeScriptCardClicks(displacementTarget);
+    identifyBirthPrc(card, displacementTarget);
     return true;
   }
 
@@ -12735,7 +12741,7 @@ window.TZ_COORDS = {
     if (result.samePrc) return `<div class="ls-row ls-row--single">${singleSeatHTML('SIGN', result.ownerCard, result.ownerCard, { label: 'SIGN', symbol: '✦', title: 'Shared planetary ruling card' })}</div>`;
     if (result.displacement) {
       const role = 'Displacing';
-      return `<div class="ls-row ls-row--single">${singleSeatHTML(role, result.ownerCard, result.ownerCard, { symbol: '↔', label: role, title: `${role} displacement` })}</div>`;
+      return `<div class="ls-row ls-row--connection-pair">${singleSeatHTML(role, result.ownerCard, result.ownerCard, { symbol: '↔', label: role, title: 'Displacing card' })}${singleSeatHTML('Displaced', result.matchCard, result.matchCard, { symbol: '↔', label: 'Displaced', title: 'Displaced card' })}</div>`;
     }
     if (result.spread === 'Ruling card') return `<div class="ls-row ls-row--single">${singleSeatHTML(result.planet, result.matchCard, result.matchCard)}</div>`;
     const single = result.planet === 'Moon' || result.planet === 'Pluto';
@@ -12756,7 +12762,7 @@ window.TZ_COORDS = {
     const source = labels ? `<p class="ls-connection-note">${labels}</p>` : '';
     const heading = spreadName ? `<h5 class="nc-spread-label">${spreadName}${result.planet ? ` · ${result.planet}` : ''}</h5>` : (!result.samePrc && !result.displacement && result.spread ? `<h5 class="nc-spread-label">${result.spread}${result.planet ? ` · ${result.planet}` : ''}</h5>` : '');
     const classes = `${result.matchRole === 'reciprocal' ? ' ls-connection--recip-match' : ''}${result.ownerRole === 'reciprocal' ? ' ls-connection--recip-owner' : ''}${result.displacement ? ' ls-connection--displacement' : ''}`;
-    return `<section class="ls-connection${classes}">${heading}${result.displacement || result.samePrc || result.spread === 'Ruling card' ? connectionSummaryHTML(result) : ''}${source}${connectionDiagramHTML(result, dates)}</section>`;
+    return `<section class="ls-connection${classes}">${heading}${result.samePrc || result.spread === 'Ruling card' ? connectionSummaryHTML(result) : ''}${source}${connectionDiagramHTML(result, dates)}</section>`;
   }
 
   function relationshipConnectionsHTML(model, dates) {
@@ -12767,8 +12773,8 @@ window.TZ_COORDS = {
       { title: 'Earth card to Earth card', matches: result => result.ownerRole === 'reciprocal' && result.matchRole === 'reciprocal' }
     ];
     return '<div class="ls-connections-wrap"><div class="nc-connections-header"><h3 class="ls-stat-label">CONNECTIONS</h3></div>' +
-      (results.length ? groups.map(function (group) {
-        const matches = results.filter(group.matches);
+      (results.length ? `<div class="nc-connection-group">${results.filter(result => result.displacement).map(result => connectionSectionModelHTML(result, null, dates)).join('')}</div>` + groups.map(function (group) {
+        const matches = results.filter(result => !result.displacement && group.matches(result));
         if (!matches.length) return '';
         const spreads = [
           { name: 'Earthly spread', key: 'Earthly Spread', className: 'earthly' },
@@ -15362,7 +15368,7 @@ window.PLANET_DATA = {
   const expanded = new Map();
   let serial = 0;
   function enhance(root) {
-    root.querySelectorAll('#fAboutDates .ls-stat-block, #fAboutCardology .ls-stat-block, #fAboutPersonality, #fAboutLongform, #fInTime, #fAboutModern > .ls-zodiac-block, #ncAlternateResult, .ls-connections-wrap').forEach(function (section) {
+    root.querySelectorAll('#fAboutDates .ls-stat-block, #fAboutCardology .ls-stat-block, #fAboutDisplacements .ls-stat-block, #fAboutPersonality, #fAboutLongform, #fInTime, #fAboutModern > .ls-zodiac-block, #ncAlternateResult, .ls-connections-wrap').forEach(function (section) {
       let heading = Array.from(section.children).find(function (child) {
         return child.matches('.ls-stat-label, .finder-about-subtitle, h3, h4, h5');
       });
@@ -15451,9 +15457,11 @@ window.PLANET_DATA = {
     const sections = [
       ['dates', 'Dates', '#fAboutDates'],
       ['about', 'About', '#fAboutPersonality'],
-      ['connections', 'Connections', '#fRelationshipConnections'],
+      ['relationship-about', 'About', '#fAboutPersonality'],
       ['reciprocal', 'Reciprocals', '#ncAlternateResult'],
-      ['cards', 'Life Script and Displacements', '#fAboutCardology'],
+      ['connections', 'Connections', '#fRelationshipConnections'],
+      ['cards', 'Life Script', '#fAboutCardology'],
+      ['displacements', 'Displacements and Sign', '#fAboutDisplacements'],
       ['cycles', 'Cycles', '#fInTime'],
       ['yenlo', 'Yenlo', '.nc-yenlo-section']
     ];
@@ -15464,19 +15472,30 @@ window.PLANET_DATA = {
     let order = saved.filter((id, index) => sections.some(section => section[0] === id) && saved.indexOf(id) === index);
     // Put the new section next to Connections for existing saved layouts.
     if (!order.includes('reciprocal') && order.includes('connections')) {
-      order.splice(order.indexOf('connections') + 1, 0, 'reciprocal');
+      order.splice(order.indexOf('connections'), 0, 'reciprocal');
     }
+    if (!order.includes('relationship-about')) {
+      const position = order.indexOf('reciprocal');
+      order.splice(position < 0 ? order.length : position, 0, 'relationship-about');
+    }
+    if (!order.includes('displacements') && order.includes('cards')) order.splice(order.indexOf('cards') + 1, 0, 'displacements');
     sections.forEach(section => { if (!order.includes(section[0])) order.push(section[0]); });
     const visibilityKey = 'mc-reading-section-visibility';
     let visibility = {};
     try { visibility = JSON.parse(localStorage.getItem(visibilityKey) || '{}'); } catch (e) {}
     if (!visibility || typeof visibility !== 'object' || Array.isArray(visibility)) visibility = {};
+    if (!Object.prototype.hasOwnProperty.call(visibility, 'displacements')) {
+      visibility.displacements = visibility.cards !== false;
+      try { localStorage.setItem(visibilityKey, JSON.stringify(visibility)); } catch (e) {}
+    }
     if (!Object.prototype.hasOwnProperty.call(visibility, 'yenlo')) visibility.yenlo = false;
     function applyOrder() {
       root.querySelectorAll(':scope > *').forEach(el => { el.style.order = '100'; });
       const summary = root.querySelector(':scope > .nc-card-summary');
       if (summary) summary.style.order = '-1';
+      const relationshipMode = document.getElementById('finder').classList.contains('rel-on');
       order.forEach((id, index) => {
+        if ((id === 'about' && relationshipMode) || (id === 'relationship-about' && !relationshipMode)) return;
         const section = sections.find(item => item[0] === id);
         const el = root.querySelector(section[2]);
         if (el && el.parentElement === root) {
@@ -15488,8 +15507,8 @@ window.PLANET_DATA = {
     function drawList() {
       list.replaceChildren();
       const groups = [
-        { name: 'Reading', ids: ['dates', 'about', 'cards', 'cycles', 'yenlo'] },
-        { name: 'Relationships', ids: ['connections', 'reciprocal'] }
+        { name: 'Reading', ids: ['dates', 'about', 'cards', 'displacements', 'cycles', 'yenlo'] },
+        { name: 'Relationships', ids: ['relationship-about', 'connections', 'reciprocal'] }
       ];
       groups.forEach(group => {
         const heading = document.createElement('li');
@@ -15568,6 +15587,7 @@ window.PLANET_DATA = {
     drawList();
     applyOrder();
     new MutationObserver(applyOrder).observe(root, { childList: true });
+    new MutationObserver(applyOrder).observe(document.getElementById('finder'), { attributes: true, attributeFilter: ['class'] });
   });
 })();
 
@@ -15610,6 +15630,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const monthView = document.getElementById('toolsCalendarMonthView');
   const yearView = document.getElementById('toolsCalendarYearView');
   const yearToggle = document.getElementById('calendarYearToggle');
+  const pairToggle = document.getElementById('calendarPairToggle');
+  const exceptionNote = document.getElementById('calendarExceptionNote');
+  let pairedMonths = false;
   const previous = document.getElementById('calendarPrevious'), next = document.getElementById('calendarNext');
   let fullYear = false;
   if (!grid || !monthInput || !yearInput || !announcement || !weekly) return;
@@ -15624,6 +15647,11 @@ document.addEventListener('DOMContentLoaded', function () {
     weekly.replaceChildren();
     monthView.hidden = fullYear;
     yearView.hidden = !fullYear;
+    pairToggle.hidden = !fullYear;
+    document.getElementById('calendarToday').hidden = fullYear;
+    pairToggle.setAttribute('aria-pressed', String(pairedMonths));
+    exceptionNote.hidden = !fullYear || !pairedMonths;
+    exceptionNote.textContent = ''; 
     yearToggle.setAttribute('aria-pressed', String(fullYear));
     yearToggle.textContent = fullYear ? 'Month view' : 'Full year';
     previous.setAttribute('aria-label', fullYear ? 'Previous year' : 'Previous month');
@@ -15702,10 +15730,11 @@ document.addEventListener('DOMContentLoaded', function () {
     yearView.replaceChildren();
     const table = document.createElement('table'), caption = document.createElement('caption');
     const head = document.createElement('thead'), header = document.createElement('tr'), body = document.createElement('tbody');
-    table.className = 'tools-calendar-year-grid';
+    table.className = 'tools-calendar-year-grid' + (pairedMonths ? ' is-paired' : '');
     caption.className = 'vh'; caption.textContent = 'Cards for each date in ' + year;
     const corner = document.createElement('th'); corner.scope = 'col'; corner.textContent = 'Day'; header.appendChild(corner);
-    for (let m = 0; m < 12; m++) {
+    const months = pairedMonths ? [0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+    for (const m of months) {
       const th = document.createElement('th'); th.scope = 'col';
       th.textContent = new Date(year, m, 1).toLocaleDateString('en-AU', { month: 'short' }).slice(0, 2);
       th.setAttribute('aria-label', new Date(year, m, 1).toLocaleDateString('en-AU', { month: 'long' })); header.appendChild(th);
@@ -15714,22 +15743,30 @@ document.addEventListener('DOMContentLoaded', function () {
     for (let day = 1; day <= 31; day++) {
       const row = document.createElement('tr'), dayHeader = document.createElement('th');
       dayHeader.scope = 'row'; dayHeader.textContent = day; row.appendChild(dayHeader);
-      for (let m = 0; m < 12; m++) {
+      for (const m of months) {
         const cell = document.createElement('td');
         if (day <= new Date(year, m + 1, 0).getDate()) {
           const date = new Date(year, m, day), value = window.solarValue(m + 1, day);
           const card = value === 0 ? { rank: 'Joker', suit: 'joker', sym: '✦' } : SPREAD_CARDS[value - 1];
           const button = document.createElement('button');
+          const matches = pairedMonths ? window.reciprocalDateMatches(m + 1, day) : [];
+          const exceptional = matches.some(match => match.note) && !(m === 5 && day === 30) && !(m === 6 && day === 1);
           button.type = 'button'; button.className = 'tools-calendar-year-day';
+          if (exceptional) button.classList.add('is-exception');
           if (card.suit === 'hearts' || card.suit === 'diamonds') button.classList.add('is-red');
-          if (date.toDateString() === new Date().toDateString()) button.classList.add('is-today');
-          if (selected && date.toDateString() === selected.toDateString()) { button.classList.add('is-selected'); button.setAttribute('aria-current', 'date'); }
-          button.setAttribute('aria-label', date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) + ', ' + (card.suit === 'joker' ? 'Joker' : card.rank + ' of ' + card.suit) + (date.toDateString() === new Date().toDateString() ? ', today' : ''));
+          if (!pairedMonths && date.toDateString() === new Date().toDateString()) button.classList.add('is-today');
+          if (!pairedMonths && selected && date.toDateString() === selected.toDateString()) { button.classList.add('is-selected'); button.setAttribute('aria-current', 'date'); }
+          button.setAttribute('aria-label', date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) + ', ' + (card.suit === 'joker' ? 'Joker' : card.rank + ' of ' + card.suit) + (date.toDateString() === new Date().toDateString() ? ', today' : '') + (exceptional ? ', reciprocal date exception' : ''));
           button.innerHTML = card.suit === 'joker' ? card.sym : '<span>' + card.rank + '</span>' + window.pipMark(card.sym);
           button.addEventListener('click', function () {
             selected = date;
             yearView.querySelectorAll('.is-selected').forEach(function (el) { el.classList.remove('is-selected'); el.removeAttribute('aria-current'); });
-            button.classList.add('is-selected'); button.setAttribute('aria-current', 'date');
+            if (!pairedMonths) { button.classList.add('is-selected'); button.setAttribute('aria-current', 'date'); }
+            exceptionNote.textContent = exceptional ? date.toLocaleDateString('en-AU', { day: 'numeric', month: 'long' }) + ' → ' + matches.map(function (match) {
+              const target = new Date(2024, match.month - 1, match.day).toLocaleDateString('en-AU', { day: 'numeric', month: 'long' });
+              const cardName = match.card ? match.card.rank + ' of ' + match.card.suit : '';
+              return target + (cardName ? ' (' + cardName + ')' : '') + (match.note ? ' — ' + match.note : '');
+            }).join('; ') + '.' : '';
             window.loadDateInFinder(m + 1, day, 'self', { year: year });
           });
           cell.appendChild(button);
@@ -15741,6 +15778,7 @@ document.addEventListener('DOMContentLoaded', function () {
     table.append(caption, head, body); yearView.appendChild(table);
   }
   yearToggle.addEventListener('click', function () { fullYear = !fullYear; render(); });
+  pairToggle.addEventListener('click', function () { pairedMonths = !pairedMonths; render(); });
   monthInput.addEventListener('change', function () {
     const value = Number(monthInput.value);
     if (/^\d{1,2}$/.test(monthInput.value) && value >= 1 && value <= 12) month = value - 1;
